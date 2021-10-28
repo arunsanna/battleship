@@ -9,6 +9,7 @@ on:
         default: 'alfa'
 
 jobs:
+  max-parallel: 1
   validate:
     runs-on: ubuntu-latest
     steps:
@@ -44,3 +45,12 @@ jobs:
           context: ./${{ github.event.inputs.name }}
           push: true
           tags: arunsanna/${{ github.event.inputs.name }}:latest
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run Snyk to check Docker image for vulnerabilities
+      uses: snyk/actions/docker@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        image: arunsanna/${{ github.event.inputs.name }}:latest
