@@ -20,7 +20,8 @@ jobs:
         with:
           dockerfile: "${{ github.event.inputs.name }}/Dockerfile"
   
-  docker:
+  build:
+    needs: validate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,6 +46,7 @@ jobs:
           push: true
           tags: arunsanna/${{ github.event.inputs.name }}:latest
   security:
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - name: Run Snyk to check Docker image for vulnerabilities
