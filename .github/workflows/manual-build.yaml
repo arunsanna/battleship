@@ -9,8 +9,6 @@ on:
         default: 'alfa'
 
 jobs:
-  strategy:
-    max-parallel: 1
   validate:
     runs-on: ubuntu-latest
     steps:
