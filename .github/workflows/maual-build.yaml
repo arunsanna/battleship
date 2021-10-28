@@ -1,9 +1,12 @@
-name: alfa-build
+name: alfa-build-manual
 
 on:
-  push:
-    branches:
-      - 'master'
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Container to Build'
+        required: true
+        default: 'alfa'
 
 jobs:
   docker:
@@ -28,6 +31,6 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: ./alfa
+          context: ./${{ github.event.inputs.name }}
           push: true
           tags: arunsanna/app:latest
