@@ -1,4 +1,4 @@
-name: alfa-build-manual
+name: build-on-demand
 
 on:
   workflow_dispatch:
