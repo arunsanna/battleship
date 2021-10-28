@@ -43,4 +43,4 @@ jobs:
         with:
           context: ./${{ github.event.inputs.name }}
           push: true
-          tags: arunsanna/app:latest
+          tags: arunsanna/${{ github.event.inputs.name }}:latest
