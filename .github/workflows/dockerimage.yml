@@ -30,4 +30,4 @@ jobs:
         with:
           context: ./alfa
           push: true
-          tags: user/app:latest
+          tags: arunsanna/app:latest
