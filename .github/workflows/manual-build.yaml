@@ -63,8 +63,6 @@ jobs:
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: arunsanna/${{ github.event.inputs.name }}:latest
-        format: 'table'
-        exit-code: '1'
         format: 'template'
         template: '@/contrib/sarif.tpl'
         output: 'trivy-results.sarif'
