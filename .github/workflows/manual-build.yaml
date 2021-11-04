@@ -65,6 +65,6 @@ jobs:
         image-ref: arunsanna/${{ github.event.inputs.name }}:latest
         format: 'table'
         exit-code: '1'
-        ignore-unfixed: true
-        vuln-type: 'os,library'
-        severity: 'CRITICAL,HIGH'
+        format: 'template'
+        template: '@/contrib/sarif.tpl'
+        output: 'trivy-results.sarif'
