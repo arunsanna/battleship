@@ -66,3 +66,5 @@ jobs:
         format: 'template'
         template: '@/contrib/sarif.tpl'
         output: 'trivy-results.sarif'
+        
+https://odoo.il2.dso.mil/survey/ec1f9a4f-4cf8-4334-91aa-d891cbe15feb/28ff3d91-8162-4bce-a38f-8eaa8e92918a
