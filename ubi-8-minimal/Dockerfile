@@ -17,25 +17,29 @@ COPY scripts /dsop-fix/
 # violate Red Hat license agreement when running the container on a non-RHEL licensed host.
 # See the following link for more details:
 # https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/building_running_and_managing_containers/index/#add_software_to_a_running_ubi_container
-RUN echo "[main]" >> /etc/dnf/dnf.conf && \
-    echo "exclude=filesystem-*" >> /etc/dnf/dnf.conf && \
-    echo Update packages and install DISA STIG fixes && \
-    # Disable all repositories (to limit RHEL host repositories) and only use official UBI repositories
-    # rm -f /etc/yum.repos.d/ubi.repo && \
-    microdnf repolist && \
-    microdnf update && \
-    microdnf install -y crypto-policies-scripts && \
-    # Do not use loops to iterate through shell scripts, this allows for scripts to fail
-    # but the build to still be successful. Be explicit when executing scripts and ensure
-    # that all scripts have "set -e" at the top of the bash file!
-    /dsop-fix/xccdf_org.ssgproject.content_rule_configure_crypto_policy.sh && \       
-    /dsop-fix/xccdf_org.ssgproject.content_rule_openssl_use_strong_entropy.sh && \   
-    /dsop-fix/xccdf_org.ssgproject.content_rule_configure_openssl_crypto_policy.sh && \    
-    /dsop-fix/xccdf_org.ssgproject.content_rule_accounts_umask_etc_bashrc.sh && \
-    /dsop-fix/xccdf_org.ssgproject.content_rule_accounts_umask_etc_profile.sh && \
-    /dsop-fix/xccdf_org.ssgproject.content_rule_accounts_umask_etc_csh_cshrc.sh && \   
-    microdnf clean all && \
-    rm -rf /dsop-fix/ /var/cache/dnf/ /var/tmp/* /tmp/* /var/tmp/.???* /tmp/.???*
+
+RUN echo "[main]" >> /etc/dnf/dnf.conf
+RUN echo "exclude=filesystem-*" >> /etc/dnf/dnf.conf
+RUN echo Update packages and install DISA STIG fixes
+
+# Disable all repositories (to limit RHEL host repositories) and only use official UBI repositories
+# rm -f /etc/yum.repos.d/ubi.repo && \
+
+RUN microdnf repolist
+RUN microdnf update
+RUN microdnf install -y crypto-policies-scripts
+
+# Do not use loops to iterate through shell scripts, this allows for scripts to fail
+# but the build to still be successful. Be explicit when executing scripts and ensure
+# that all scripts have "set -e" at the top of the bash file!
+RUN /dsop-fix/xccdf_org.ssgproject.content_rule_configure_crypto_policy.sh
+RUN /dsop-fix/xccdf_org.ssgproject.content_rule_openssl_use_strong_entropy.sh
+RUN /dsop-fix/xccdf_org.ssgproject.content_rule_configure_openssl_crypto_policy.sh
+RUN /dsop-fix/xccdf_org.ssgproject.content_rule_accounts_umask_etc_bashrc.sh
+RUN /dsop-fix/xccdf_org.ssgproject.content_rule_accounts_umask_etc_profile.sh
+RUN /dsop-fix/xccdf_org.ssgproject.content_rule_accounts_umask_etc_csh_cshrc.sh
+RUN microdnf clean all
+RUN rm -rf /dsop-fix/ /var/cache/dnf/ /var/tmp/* /tmp/* /var/tmp/.???* /tmp/.???*
 
 ENV container oci
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
