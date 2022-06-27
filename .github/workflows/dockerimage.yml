@@ -1,4 +1,4 @@
-name: alfa-build
+name: build-images
 
 on:
   push:
