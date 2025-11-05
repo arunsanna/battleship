@@ -36,6 +36,23 @@ on:
       - 'ubi-8-standard/**'
       - '.github/workflows/dockerimage.yml'
   workflow_dispatch:
+    inputs:
+      container:
+        description: "Optional: build only this container (overrides path filter)"
+        required: false
+        type: choice
+        options:
+          - alfa
+          - cuda
+          - diagnostics
+          - kustomize
+          - network
+          - terraform
+          - terragrunt
+          - ubi-8-fips
+          - ubi-8-micro
+          - ubi-8-minimal
+          - ubi-8-standard
 
 concurrency:
   group: build-images-${{ github.ref }}
@@ -92,7 +109,7 @@ jobs:
   # Alfa container
   build-alfa:
     needs: changes
-    if: needs.changes.outputs.alfa == 'true'
+    if: needs.changes.outputs.alfa == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'alfa')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -113,16 +130,24 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
+      
+      - name: Docker meta (alfa)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: arunsanna/alfa
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+      
       - name: Build and push alfa
         uses: docker/build-push-action@v5
         with:
           context: ./alfa
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: |
-            arunsanna/alfa:latest
-            arunsanna/alfa:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=registry,ref=arunsanna/alfa:buildcache
           cache-to: type=registry,ref=arunsanna/alfa:buildcache,mode=max
 
@@ -143,7 +168,7 @@ jobs:
   # CUDA container
   build-cuda:
     needs: changes
-    if: needs.changes.outputs.cuda == 'true'
+    if: needs.changes.outputs.cuda == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'cuda')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -194,7 +219,7 @@ jobs:
   # Diagnostics container
   build-diagnostics:
     needs: changes
-    if: needs.changes.outputs.diagnostics == 'true'
+    if: needs.changes.outputs.diagnostics == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'diagnostics')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -245,7 +270,7 @@ jobs:
   # Kustomize container
   build-kustomize:
     needs: changes
-    if: needs.changes.outputs.kustomize == 'true'
+    if: needs.changes.outputs.kustomize == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'kustomize')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -296,7 +321,7 @@ jobs:
   # Network container
   build-network:
     needs: changes
-    if: needs.changes.outputs.network == 'true'
+    if: needs.changes.outputs.network == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'network')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -347,7 +372,7 @@ jobs:
   # Terraform container
   build-terraform:
     needs: changes
-    if: needs.changes.outputs.terraform == 'true'
+    if: needs.changes.outputs.terraform == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'terraform')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -398,7 +423,7 @@ jobs:
   # Terragrunt container
   build-terragrunt:
     needs: changes
-    if: needs.changes.outputs.terragrunt == 'true'
+    if: needs.changes.outputs.terragrunt == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'terragrunt')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -449,7 +474,7 @@ jobs:
   # UBI-8 FIPS container
   build-ubi-8-fips:
     needs: changes
-    if: needs.changes.outputs.ubi-8-fips == 'true'
+    if: needs.changes.outputs.ubi-8-fips == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'ubi-8-fips')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -500,7 +525,7 @@ jobs:
   # UBI-8 Micro container
   build-ubi-8-micro:
     needs: changes
-    if: needs.changes.outputs.ubi-8-micro == 'true'
+    if: needs.changes.outputs.ubi-8-micro == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'ubi-8-micro')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -551,7 +576,7 @@ jobs:
   # UBI-8 Minimal container
   build-ubi-8-minimal:
     needs: changes
-    if: needs.changes.outputs.ubi-8-minimal == 'true'
+    if: needs.changes.outputs.ubi-8-minimal == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'ubi-8-minimal')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -602,7 +627,7 @@ jobs:
   # UBI-8 Standard container
   build-ubi-8-standard:
     needs: changes
-    if: needs.changes.outputs.ubi-8-standard == 'true'
+    if: needs.changes.outputs.ubi-8-standard == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.container == 'ubi-8-standard')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
