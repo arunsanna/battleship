@@ -1,13 +1,13 @@
 # ./Dockerfile
 
-FROM node:12-alpine as node-angular-cli
+FROM node:20-alpine as node-angular-cli
 
 LABEL authors="Arun"
+LABEL org.opencontainers.image.source="https://github.com/arunsanna/battleship"
+LABEL org.opencontainers.image.description="Node.js with Angular CLI"
 
 # Linux setup
-# I got this from another, deprecated Angular CLI image.
-# I trust that developer, so I continued to use this, but you
-# can leave it out if you want.
+# Install build dependencies and clean up in single layer
 RUN apk update \
   && apk add --update alpine-sdk \
   && apk del alpine-sdk \
@@ -15,5 +15,5 @@ RUN apk update \
   && npm cache verify \
   && sed -i -e "s/bin\/ash/bin\/sh/" /etc/passwd
 
-# Angular CLI
-RUN npm install -g @angular/cli@8
+# Angular CLI - updated to latest version
+RUN npm install -g @angular/cli@17# Trigger build
