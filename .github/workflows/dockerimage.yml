@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - 'master'
+      - 'main'
+      - 'develop'
     paths:
       - 'alfa/**'
       - 'cuda/**'
@@ -20,6 +22,8 @@ on:
   pull_request:
     branches:
       - 'master'
+      - 'main'
+      - 'develop'
     paths:
       - 'alfa/**'
       - 'cuda/**'
@@ -33,6 +37,7 @@ on:
       - 'ubi-8-minimal/**'
       - 'ubi-8-standard/**'
       - '.github/workflows/dockerimage.yml'
+  workflow_dispatch:
 
 jobs:
   # Detect which containers have changed
@@ -111,8 +116,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./alfa
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/alfa:latest
+          tags: |
+            arunsanna/alfa:latest
+            arunsanna/alfa:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/alfa:buildcache
           cache-to: type=registry,ref=arunsanna/alfa:buildcache,mode=max
 
@@ -159,8 +167,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./cuda
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/cuda:latest
+          tags: |
+            arunsanna/cuda:latest
+            arunsanna/cuda:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/cuda:buildcache
           cache-to: type=registry,ref=arunsanna/cuda:buildcache,mode=max
 
@@ -207,8 +218,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./diagnostics
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/diagnostics:latest
+          tags: |
+            arunsanna/diagnostics:latest
+            arunsanna/diagnostics:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/diagnostics:buildcache
           cache-to: type=registry,ref=arunsanna/diagnostics:buildcache,mode=max
 
@@ -255,8 +269,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./kustomize
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/kustomize:latest
+          tags: |
+            arunsanna/kustomize:latest
+            arunsanna/kustomize:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/kustomize:buildcache
           cache-to: type=registry,ref=arunsanna/kustomize:buildcache,mode=max
 
@@ -303,8 +320,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./network
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/network:latest
+          tags: |
+            arunsanna/network:latest
+            arunsanna/network:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/network:buildcache
           cache-to: type=registry,ref=arunsanna/network:buildcache,mode=max
 
@@ -351,8 +371,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./terraform
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/terraform:latest
+          tags: |
+            arunsanna/terraform:latest
+            arunsanna/terraform:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/terraform:buildcache
           cache-to: type=registry,ref=arunsanna/terraform:buildcache,mode=max
 
@@ -399,8 +422,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./terragrunt
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/terragrunt:latest
+          tags: |
+            arunsanna/terragrunt:latest
+            arunsanna/terragrunt:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/terragrunt:buildcache
           cache-to: type=registry,ref=arunsanna/terragrunt:buildcache,mode=max
 
@@ -447,8 +473,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-fips
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/ubi-8-fips:latest
+          tags: |
+            arunsanna/ubi-8-fips:latest
+            arunsanna/ubi-8-fips:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/ubi-8-fips:buildcache
           cache-to: type=registry,ref=arunsanna/ubi-8-fips:buildcache,mode=max
 
@@ -495,8 +524,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-micro
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/ubi-8-micro:latest
+          tags: |
+            arunsanna/ubi-8-micro:latest
+            arunsanna/ubi-8-micro:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/ubi-8-micro:buildcache
           cache-to: type=registry,ref=arunsanna/ubi-8-micro:buildcache,mode=max
 
@@ -543,8 +575,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-minimal
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/ubi-8-minimal:latest
+          tags: |
+            arunsanna/ubi-8-minimal:latest
+            arunsanna/ubi-8-minimal:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/ubi-8-minimal:buildcache
           cache-to: type=registry,ref=arunsanna/ubi-8-minimal:buildcache,mode=max
 
@@ -591,8 +626,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-standard
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
-          tags: arunsanna/ubi-8-standard:latest
+          tags: |
+            arunsanna/ubi-8-standard:latest
+            arunsanna/ubi-8-standard:${{ github.sha }}
           cache-from: type=registry,ref=arunsanna/ubi-8-standard:buildcache
           cache-to: type=registry,ref=arunsanna/ubi-8-standard:buildcache,mode=max
 
