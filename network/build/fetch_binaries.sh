@@ -19,6 +19,11 @@ case $ARCH in
 esac
 
 get_ctop() {
+  # ctop doesn't have arm64 binaries for recent versions, fall back to amd64 or skip
+  if [ "$ARCH" == "arm64" ]; then
+    echo "echo 'ctop not available for arm64, skipping'" > /tmp/ctop && chmod +x /tmp/ctop
+    return
+  fi
   VERSION=$(get_latest_release bcicen/ctop | sed -e 's/^v//')
   LINK="https://github.com/bcicen/ctop/releases/download/${VERSION}/ctop-${VERSION}-linux-${ARCH}"
   wget "$LINK" -O /tmp/ctop && chmod +x /tmp/ctop
