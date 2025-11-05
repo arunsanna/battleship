@@ -1,5 +1,8 @@
-# Base builder (needs to be buster)
-FROM golang:1.13-buster as build
+# Base builder - updated to bookworm
+FROM golang:1.21-bookworm as build
+
+LABEL org.opencontainers.image.source="https://github.com/arunsanna/battleship"
+LABEL org.opencontainers.image.description="Kustomize with plugins"
 
 ENV GOARCH="amd64"
 ENV GOENV="linux"
@@ -11,11 +14,12 @@ ARG KUSTOMIZE_PLUGIN_PATH=/.config/kustomize/plugin
 # --------------------------------------------------------------------------
 # Kustomize Generator
 # --------------------------------------------------------------------------
-# Kustomization
-ARG KUSTOMIZE_VERISON="3.8.0"
-RUN curl -Lo kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v${KUSTOMIZE_VERISON}/kustomize_v${KUSTOMIZE_VERISON}_linux_amd64.tar.gz && \
+# Kustomization - updated to v5.x
+ARG KUSTOMIZE_VERSION="5.3.0"
+RUN curl -Lo kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_${GOENV}_${GOARCH}.tar.gz && \
     tar -xzf kustomize.tar.gz && \
-    chmod +x kustomize
+    chmod +x kustomize && \
+    rm kustomize.tar.gz
 
 # --------------------------------------------------------------------------
 # Helm Generator
@@ -39,8 +43,8 @@ RUN curl -Lo ${SOPSGENERATOR_NAME} ${SOPSGENERATOR_URL} && \
 
 # Move things into their correct folder
 
-# Copy over to base distroless
-FROM gcr.io/distroless/base-debian10
+# Copy over to base distroless - updated to debian12
+FROM gcr.io/distroless/base-debian12
 
 ENV XDG_CONFIG_HOME=/.config
 ENV KUSTOMIZE_PLUGIN_PATH=${XDG_CONFIG_HOME}/kustomize/plugin
