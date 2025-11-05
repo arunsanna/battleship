@@ -1,5 +1,6 @@
 FROM debian:stable-slim as fetcher
 
+# Fetch network diagnostic binaries
 COPY build/fetch_binaries.sh /tmp/fetch_binaries.sh
 
 RUN apt-get update && apt-get install -y \
