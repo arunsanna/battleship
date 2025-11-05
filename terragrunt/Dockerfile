@@ -11,7 +11,7 @@ USER root
 
 # Updated Terragrunt version with checksum verification
 ARG TERRAGRUNT_VERSION=0.55.1
-ARG TERRAGRUNT_SHA256=999339e725e4b50ac421502f5ea94e6634e543bc4d8320e8cc7f3c91d5a0d6e8
+ARG TERRAGRUNT_SHA256=61983a96bf06c87c1854a7926f002289207f07f30234a208ed7b12f3c5b8f876
 
 RUN curl -fsSL "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64" -o /usr/local/bin/terragrunt && \
     echo "${TERRAGRUNT_SHA256}  /usr/local/bin/terragrunt" | sha256sum -c - && \

@@ -24,7 +24,9 @@ RUN apt-get update && \
     apt-get install -y nvidia-container-toolkit${NVIDIA_CONTAINER_RUNTIME_VERSION:+=$NVIDIA_CONTAINER_RUNTIME_VERSION} && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=k3s / /
+# Copy K3s binaries and necessary files selectively
+COPY --from=k3s /bin/k3s /bin/k3s
+COPY --from=k3s /bin/aux /bin/aux
 
 RUN mkdir -p /etc && \
     echo 'hosts: files dns' > /etc/nsswitch.conf
