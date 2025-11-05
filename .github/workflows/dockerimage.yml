@@ -3,9 +3,7 @@ name: build-images
 on:
   push:
     branches:
-      - 'master'
-      - 'main'
-      - 'develop'
+      - '**'
     paths:
       - 'alfa/**'
       - 'cuda/**'
@@ -38,6 +36,10 @@ on:
       - 'ubi-8-standard/**'
       - '.github/workflows/dockerimage.yml'
   workflow_dispatch:
+
+concurrency:
+  group: build-images-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # Detect which containers have changed
