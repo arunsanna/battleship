@@ -31,3 +31,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD ["/bin/terraform", "version"]
 
 ENTRYPOINT ["/bin/terraform"]
+
+# CI test: 2025-11-06T00:25:45Z
