@@ -349,6 +349,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.terraform == 'true'
     runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -363,7 +365,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -373,8 +375,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./terraform
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/terraform:latest
             arunsanna/terraform:${{ github.sha }}
@@ -400,6 +402,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.terragrunt == 'true'
     runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -414,7 +418,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -424,8 +428,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./terragrunt
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/terragrunt:latest
             arunsanna/terragrunt:${{ github.sha }}
@@ -451,6 +455,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ubi-8-fips == 'true'
     runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -465,7 +471,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -475,8 +481,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-fips
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/ubi-8-fips:latest
             arunsanna/ubi-8-fips:${{ github.sha }}
@@ -502,6 +508,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ubi-8-micro == 'true'
     runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -516,7 +524,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -526,8 +534,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-micro
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/ubi-8-micro:latest
             arunsanna/ubi-8-micro:${{ github.sha }}
@@ -553,6 +561,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ubi-8-minimal == 'true'
     runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -567,7 +577,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -577,8 +587,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-minimal
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/ubi-8-minimal:latest
             arunsanna/ubi-8-minimal:${{ github.sha }}
@@ -604,6 +614,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ubi-8-standard == 'true'
     runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -618,7 +630,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -628,8 +640,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-standard
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/ubi-8-standard:latest
             arunsanna/ubi-8-standard:${{ github.sha }}

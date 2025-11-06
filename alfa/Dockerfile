@@ -16,4 +16,4 @@ RUN apk update \
   && sed -i -e "s/bin\/ash/bin\/sh/" /etc/passwd
 
 # Angular CLI - updated to latest version
-RUN npm install -g @angular/cli@17# Trigger build
+RUN npm install -g @angular/cli@17
