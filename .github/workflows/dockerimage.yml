@@ -17,32 +17,31 @@ on:
       - 'ubi-8-minimal/**'
       - 'ubi-8-standard/**'
       - '.github/workflows/dockerimage.yml'
-  pull_request:
-    branches:
-      - 'master'
-      - 'main'
-      - 'develop'
-    paths:
-      - 'alfa/**'
-      - 'cuda/**'
-      - 'diagnostics/**'
-      - 'kustomize/**'
-      - 'network/**'
-      - 'terraform/**'
-      - 'terragrunt/**'
-      - 'ubi-8-fips/**'
-      - 'ubi-8-micro/**'
-      - 'ubi-8-minimal/**'
-      - 'ubi-8-standard/**'
-      - '.github/workflows/dockerimage.yml'
   workflow_dispatch:
+    inputs:
+      container:
+        description: 'Build only this container (or "all")'
+        required: true
+        type: choice
+        options:
+          - all
+          - alfa
+          - cuda
+          - diagnostics
+          - kustomize
+          - network
+          - terraform
+          - terragrunt
+          - ubi-8-fips
+          - ubi-8-micro
+          - ubi-8-minimal
+          - ubi-8-standard
 
 concurrency:
   group: build-images-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # Detect which containers have changed
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -58,12 +57,9 @@ jobs:
       ubi-8-minimal: ${{ steps.filter.outputs.ubi-8-minimal }}
       ubi-8-standard: ${{ steps.filter.outputs.ubi-8-standard }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Check for changes
+      - uses: actions/checkout@v4
+      - id: filter
         uses: dorny/paths-filter@v3
-        id: filter
         with:
           filters: |
             alfa:
@@ -89,575 +85,311 @@ jobs:
             ubi-8-standard:
               - 'ubi-8-standard/**'
 
-  # Alfa container
   build-alfa:
     needs: changes
-    if: needs.changes.outputs.alfa == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate Dockerfile
-        run: docker run --rm -i hadolint/hadolint < alfa/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        if: github.event_name == 'push'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push alfa
-        uses: docker/build-push-action@v5
-        with:
-          context: ./alfa
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
-          tags: |
-            arunsanna/alfa:latest
-            arunsanna/alfa:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/alfa:buildcache
-          cache-to: type=registry,ref=arunsanna/alfa:buildcache,mode=max
-
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/alfa:latest
-          format: 'sarif'
-          output: 'trivy-results-alfa.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-alfa.sarif'
-
-  # CUDA container
-  build-cuda:
-    needs: changes
-    if: needs.changes.outputs.cuda == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate Dockerfile
-        run: docker run --rm -i hadolint/hadolint < cuda/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        if: github.event_name == 'push'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push cuda
-        uses: docker/build-push-action@v5
-        with:
-          context: ./cuda
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
-          tags: |
-            arunsanna/cuda:latest
-            arunsanna/cuda:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/cuda:buildcache
-          cache-to: type=registry,ref=arunsanna/cuda:buildcache,mode=max
-
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/cuda:latest
-          format: 'sarif'
-          output: 'trivy-results-cuda.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-cuda.sarif'
-
-  # Diagnostics container
-  build-diagnostics:
-    needs: changes
-    if: needs.changes.outputs.diagnostics == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate Dockerfile
-        run: docker run --rm -i hadolint/hadolint < diagnostics/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        if: github.event_name == 'push'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push diagnostics
-        uses: docker/build-push-action@v5
-        with:
-          context: ./diagnostics
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
-          tags: |
-            arunsanna/diagnostics:latest
-            arunsanna/diagnostics:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/diagnostics:buildcache
-          cache-to: type=registry,ref=arunsanna/diagnostics:buildcache,mode=max
-
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/diagnostics:latest
-          format: 'sarif'
-          output: 'trivy-results-diagnostics.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-diagnostics.sarif'
-
-  # Kustomize container
-  build-kustomize:
-    needs: changes
-    if: needs.changes.outputs.kustomize == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate Dockerfile
-        run: docker run --rm -i hadolint/hadolint < kustomize/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        if: github.event_name == 'push'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push kustomize
-        uses: docker/build-push-action@v5
-        with:
-          context: ./kustomize
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
-          tags: |
-            arunsanna/kustomize:latest
-            arunsanna/kustomize:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/kustomize:buildcache
-          cache-to: type=registry,ref=arunsanna/kustomize:buildcache,mode=max
-
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/kustomize:latest
-          format: 'sarif'
-          output: 'trivy-results-kustomize.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-kustomize.sarif'
-
-  # Network container
-  build-network:
-    needs: changes
-    if: needs.changes.outputs.network == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate Dockerfile
-        run: docker run --rm -i hadolint/hadolint < network/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        if: github.event_name == 'push'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push network
-        uses: docker/build-push-action@v5
-        with:
-          context: ./network
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
-          tags: |
-            arunsanna/network:latest
-            arunsanna/network:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/network:buildcache
-          cache-to: type=registry,ref=arunsanna/network:buildcache,mode=max
-
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/network:latest
-          format: 'sarif'
-          output: 'trivy-results-network.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-network.sarif'
-
-  # Terraform container
-  build-terraform:
-    needs: changes
-    if: needs.changes.outputs.terraform == 'true'
+    if: needs.changes.outputs.alfa == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'alfa' || github.event.inputs.container == 'all'))
     runs-on: ubuntu-latest
     env:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Validate Dockerfile
-        run: docker run --rm -i hadolint/hadolint < terraform/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+        run: docker run --rm -i hadolint/hadolint < alfa/Dockerfile || true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
-        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push terraform
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: ./terraform
+          context: ./alfa
           platforms: ${{ env.PLATFORMS }}
-          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
-            arunsanna/terraform:latest
-            arunsanna/terraform:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/terraform:buildcache
-          cache-to: type=registry,ref=arunsanna/terraform:buildcache,mode=max
+            arunsanna/alfa:latest
+            arunsanna/alfa:${{ github.sha }}
 
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/terraform:latest
-          format: 'sarif'
-          output: 'trivy-results-terraform.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-terraform.sarif'
-
-  # Terragrunt container
-  build-terragrunt:
+  build-cuda:
     needs: changes
-    if: needs.changes.outputs.terragrunt == 'true'
+    if: needs.changes.outputs.cuda == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'cuda' || github.event.inputs.container == 'all'))
     runs-on: ubuntu-latest
     env:
       PLATFORMS: linux/amd64
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Validate Dockerfile
-        run: docker run --rm -i hadolint/hadolint < terragrunt/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+        run: docker run --rm -i hadolint/hadolint < cuda/Dockerfile || true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
-        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./cuda
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          tags: |
+            arunsanna/cuda:latest
+            arunsanna/cuda:${{ github.sha }}
 
-      - name: Build and push terragrunt
+  build-diagnostics:
+    needs: changes
+    if: needs.changes.outputs.diagnostics == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'diagnostics' || github.event.inputs.container == 'all'))
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Dockerfile
+        run: docker run --rm -i hadolint/hadolint < diagnostics/Dockerfile || true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./diagnostics
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          tags: |
+            arunsanna/diagnostics:latest
+            arunsanna/diagnostics:${{ github.sha }}
+
+  build-kustomize:
+    needs: changes
+    if: needs.changes.outputs.kustomize == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'kustomize' || github.event.inputs.container == 'all'))
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Dockerfile
+        run: docker run --rm -i hadolint/hadolint < kustomize/Dockerfile || true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./kustomize
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          tags: |
+            arunsanna/kustomize:latest
+            arunsanna/kustomize:${{ github.sha }}
+
+  build-network:
+    needs: changes
+    if: needs.changes.outputs.network == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'network' || github.event.inputs.container == 'all'))
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Dockerfile
+        run: docker run --rm -i hadolint/hadolint < network/Dockerfile || true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./network
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          tags: |
+            arunsanna/network:latest
+            arunsanna/network:${{ github.sha }}
+
+  build-terraform:
+    needs: changes
+    if: needs.changes.outputs.terraform == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'terraform' || github.event.inputs.container == 'all'))
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Dockerfile
+        run: docker run --rm -i hadolint/hadolint < terraform/Dockerfile || true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./terraform
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          tags: |
+            arunsanna/terraform:latest
+            arunsanna/terraform:${{ github.sha }}
+
+  build-terragrunt:
+    needs: changes
+    if: needs.changes.outputs.terragrunt == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'terragrunt' || github.event.inputs.container == 'all'))
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Dockerfile
+        run: docker run --rm -i hadolint/hadolint < terragrunt/Dockerfile || true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./terragrunt
           platforms: ${{ env.PLATFORMS }}
-          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/terragrunt:latest
             arunsanna/terragrunt:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/terragrunt:buildcache
-          cache-to: type=registry,ref=arunsanna/terragrunt:buildcache,mode=max
 
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/terragrunt:latest
-          format: 'sarif'
-          output: 'trivy-results-terragrunt.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-terragrunt.sarif'
-
-  # UBI-8 FIPS container
   build-ubi-8-fips:
     needs: changes
-    if: needs.changes.outputs.ubi-8-fips == 'true'
+    if: needs.changes.outputs.ubi-8-fips == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'ubi-8-fips' || github.event.inputs.container == 'all'))
     runs-on: ubuntu-latest
     env:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Validate Dockerfile
         run: docker run --rm -i hadolint/hadolint < ubi-8-fips/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
-        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push ubi-8-fips
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-fips
           platforms: ${{ env.PLATFORMS }}
-          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/ubi-8-fips:latest
             arunsanna/ubi-8-fips:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/ubi-8-fips:buildcache
-          cache-to: type=registry,ref=arunsanna/ubi-8-fips:buildcache,mode=max
 
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/ubi-8-fips:latest
-          format: 'sarif'
-          output: 'trivy-results-ubi-8-fips.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-ubi-8-fips.sarif'
-
-  # UBI-8 Micro container
   build-ubi-8-micro:
     needs: changes
-    if: needs.changes.outputs.ubi-8-micro == 'true'
+    if: needs.changes.outputs.ubi-8-micro == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'ubi-8-micro' || github.event.inputs.container == 'all'))
     runs-on: ubuntu-latest
     env:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Validate Dockerfile
         run: docker run --rm -i hadolint/hadolint < ubi-8-micro/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
-        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push ubi-8-micro
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-micro
           platforms: ${{ env.PLATFORMS }}
-          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/ubi-8-micro:latest
             arunsanna/ubi-8-micro:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/ubi-8-micro:buildcache
-          cache-to: type=registry,ref=arunsanna/ubi-8-micro:buildcache,mode=max
 
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/ubi-8-micro:latest
-          format: 'sarif'
-          output: 'trivy-results-ubi-8-micro.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-ubi-8-micro.sarif'
-
-  # UBI-8 Minimal container
   build-ubi-8-minimal:
     needs: changes
-    if: needs.changes.outputs.ubi-8-minimal == 'true'
+    if: needs.changes.outputs.ubi-8-minimal == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'ubi-8-minimal' || github.event.inputs.container == 'all'))
     runs-on: ubuntu-latest
     env:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Validate Dockerfile
         run: docker run --rm -i hadolint/hadolint < ubi-8-minimal/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
-        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push ubi-8-minimal
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-minimal
           platforms: ${{ env.PLATFORMS }}
-          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/ubi-8-minimal:latest
             arunsanna/ubi-8-minimal:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/ubi-8-minimal:buildcache
-          cache-to: type=registry,ref=arunsanna/ubi-8-minimal:buildcache,mode=max
 
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/ubi-8-minimal:latest
-          format: 'sarif'
-          output: 'trivy-results-ubi-8-minimal.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-ubi-8-minimal.sarif'
-
-  # UBI-8 Standard container
   build-ubi-8-standard:
     needs: changes
-    if: needs.changes.outputs.ubi-8-standard == 'true'
+    if: needs.changes.outputs.ubi-8-standard == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.container == 'ubi-8-standard' || github.event.inputs.container == 'all'))
     runs-on: ubuntu-latest
     env:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Validate Dockerfile
         run: docker run --rm -i hadolint/hadolint < ubi-8-standard/Dockerfile || true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
-        if: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push ubi-8-standard
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./ubi-8-standard
           platforms: ${{ env.PLATFORMS }}
-          push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+          push: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
           tags: |
             arunsanna/ubi-8-standard:latest
             arunsanna/ubi-8-standard:${{ github.sha }}
-          cache-from: type=registry,ref=arunsanna/ubi-8-standard:buildcache
-          cache-to: type=registry,ref=arunsanna/ubi-8-standard:buildcache,mode=max
 
-      - name: Run Trivy scanner
-        if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: arunsanna/ubi-8-standard:latest
-          format: 'sarif'
-          output: 'trivy-results-ubi-8-standard.sarif'
-
-      - name: Upload Trivy results
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-ubi-8-standard.sarif'
